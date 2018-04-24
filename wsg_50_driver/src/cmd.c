@@ -78,7 +78,8 @@
 //------------------------------------------------------------------------
 
 static bool connected = false;
-
+unsigned char pending_command;
+bool cmd_pending = false;
 
 //------------------------------------------------------------------------
 // Unit testing
@@ -152,13 +153,13 @@ int cmd_submit( unsigned char id, unsigned char *payload, unsigned int len,
 			fprintf( stderr, "Message receive failed\n" );
 			return -1;
 		}
-
-		// Check response ID
-		if ( msg.id != id )
-		{
-			fprintf( stderr, "Response ID (%2x) does not match submitted command ID (%2x)\n", msg.id, id );
-			return -1;
-		}
+		
+		// // Check response ID
+		// if ( msg.id != id )
+		// {
+		// 	fprintf( stderr, "Response ID (%2x) does not match submitted command ID (%2x)\n", msg.id, id );
+		// 	return -1;
+		// }
 
 		if ( pending )
 		{
@@ -172,6 +173,28 @@ int cmd_submit( unsigned char id, unsigned char *payload, unsigned int len,
 		}
 	}
 	while( pending && status == E_CMD_PENDING );
+
+	// if (status != E_CMD_PENDING && pending_command)
+	// {
+	// 	pending_command = false;
+	// 	return cmd_submit(id, payload, len, pending, *response, *response_len);
+	// }
+	// else if (status == E_CMD_PENDING)
+	// {
+	// 	pending_command = true;
+	// }
+
+	// kaiden: I added this to explore trying to send a move command and read force while moving
+	if (status == E_CMD_PENDING)
+	{
+		cmd_pending = true;
+		pending_command = msg.id;
+	}
+	else if (cmd_pending && pending_command == msg.id)
+	{
+		cmd_pending = false;
+		return cmd_submit(id, payload, len, pending, response, response_len);
+	}
 
 
 	// Return payload

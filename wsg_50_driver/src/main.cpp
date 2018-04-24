@@ -137,7 +137,7 @@ bool moveSrv(wsg_50_common::Move::Request &req, wsg_50_common::Move::Response &r
 {
 	if ( (req.width >= 0.0 && req.width <= 110.0) && (req.speed > 0.0 && req.speed <= 420.0) ){
   		ROS_INFO("Moving to %f position at %f mm/s.", req.width, req.speed);
-		res.error = move(req.width, req.speed, false);
+		res.error = move(req.width, req.speed, false, false);
 	}else if (req.width < 0.0 || req.width > 110.0){
 		ROS_ERROR("Imposible to move to this position. (Width values: [0.0 - 110.0] ");
 		res.error = 255;
@@ -685,7 +685,7 @@ int main( int argc, char **argv )
             //finger_pub.publish(force_msg);
             getGraspingForce();
             float pos = -(getFingerWidth() / 2000);
-            std::cout << "-------------+++" << pos << "----------------------\n";
+            //std::cout << "-------------+++" << pos << "----------------------\n";
             joint_state.header.stamp = ros::Time::now();
             joint_state.name.resize(2);
             joint_state.position.resize(2);

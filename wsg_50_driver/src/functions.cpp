@@ -292,7 +292,7 @@ float getGraspingForce ()
         payload[2] = ((auto_update & 0xff00) >> 8);
     }
 
-    res = cmd_submit(0x45, payload, 3, false, &resp, &resp_len ); 
+    res = cmd_submit(0x45, payload, 3, true, &resp, &resp_len ); 
 
     // Check response status
 	status = cmd_get_response_status( resp );
@@ -303,7 +303,7 @@ float getGraspingForce ()
 	}
 
     float force = convert(&resp[2]);
-    //std::cout << "---------------" << force << "----------------------\n";
+    std::cout << "---------------" << force << "----------------------\n";
     free(resp);
     return force;
 
@@ -362,9 +362,10 @@ int move( float width, float speed, bool stop_on_block, bool ignore_response)
 	memcpy( &payload[1], &width, sizeof( float ) );
 	memcpy( &payload[5], &speed, sizeof( float ) );
 
-    if (!ignore_response) {
+    //if (!ignore_response) {
         // Submit command and wait for response. Push result to stack.
-        res = cmd_submit( 0x21, payload, 9, true, &resp, &resp_len );
+        res = cmd_submit( 0x21, payload, 9, ignore_response, &resp, &resp_len );
+        std::cout << "-------------+++"<< ignore_response << " not ignored " <<"----------------------\n";
         if ( res != 2 )
         {
             dbgPrint( "Response payload length doesn't match (is %d, expected 2)\n", res );
@@ -372,7 +373,7 @@ int move( float width, float speed, bool stop_on_block, bool ignore_response)
             return 0;
         }
 
-        // Check response status
+        //Check response status
         status = cmd_get_response_status( resp );
         free( resp );
         if ( status != E_SUCCESS )
@@ -380,34 +381,39 @@ int move( float width, float speed, bool stop_on_block, bool ignore_response)
             dbgPrint( "Command MOVE not successful: %s\n", status_to_str( status ) );
             return -1;
         }
-    } else {
-        // Submit command, do not wait for response
-        msg_t msg;
-        msg.id = 0x21; msg.len = 9; msg.data = &payload[0];
-        res = msg_send(&msg);
-        if (res <= 0) {
-            dbgPrint("Failed to send command MOVE\n");
-            return -1;
-        }
-    }
+    // } else {
+    //     // Submit command, do not wait for response
+    //     msg_t msg;
+    //     msg.id = 0x21; msg.len = 9; msg.data = &payload[0];
+    //     res = msg_send(&msg);
+    //     std::cout << "-------------+++" << " ignored " <<"----------------------\n";
+		
+    //     if (res <= 0) {
+    //         dbgPrint("Failed to send command MOVE\n");
+    //         return -1;
+    //     }
+    // }
 
 	return 0;
 }
 
-void graspForce( float force, float speed)
+void graspForce( float forceLimit, float speed)
 {
-	while (getGraspingForce () <= force)
+	float force = getGraspingForce();
+	move(0, speed, false, true);
+	while (force <= forceLimit)
 	{
+		std::cout << "-------------detected force" << force << " set limit: " << forceLimit <<"----------------------\n";
 		if(getFingerWidth() <= 6)
 		{
 			dbgPrint("No object to grab\n");
-			move(100, speed, false);
+			move(100, speed, false, false);
 			return;
 		}
-
-		move(getFingerWidth() - 0.05, speed, false);
+		force = getGraspingForce();
 	}
-}
+	stop(true);
+}	
 
 int stop( bool ignore_response )
 {
