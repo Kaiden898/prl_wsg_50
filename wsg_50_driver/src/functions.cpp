@@ -333,7 +333,7 @@ float getFingerWidth()
 	status = cmd_get_response_status( resp );
 	if ( status != E_SUCCESS )
 	{
-		dbgPrint( "Unable to get gripping force: %s\n", status_to_str( status ) );
+		dbgPrint( "Unable to get gripper width: %s\n", status_to_str( status ) );
 		return -1;
 	}
 
@@ -364,21 +364,25 @@ int move( float width, float speed, bool stop_on_block, bool ignore_response)
 
     //if (!ignore_response) {
         // Submit command and wait for response. Push result to stack.
+	std::cout << "-------------+++" <<" start of command " <<"----------------------\n";
         res = cmd_submit( 0x21, payload, 9, ignore_response, &resp, &resp_len );
-        std::cout << "-------------+++"<< ignore_response << " not ignored " <<"----------------------\n";
-        if ( res != 2 )
-        {
-            dbgPrint( "Response payload length doesn't match (is %d, expected 2)\n", res );
-            if ( res > 0 ) free( resp );
-            return 0;
-        }
+
+        std::cout << "-------------+++" << " end of command " <<"----------------------\n";
+        // if ( res != 2 )
+        // {
+        //     dbgPrint( "Response payload length doesn't match (is %d, expected 2)\n", res );
+        //     if ( res > 0 ) free( resp );
+        //     return 0;
+        // }
 
         //Check response status
         status = cmd_get_response_status( resp );
+        //std::cout << "the status is: " << status_to_str(status);
         free( resp );
-        if ( status != E_SUCCESS )
+        if ( status != E_SUCCESS && status != E_CMD_PENDING)
         {
-            dbgPrint( "Command MOVE not successful: %s\n", status_to_str( status ) );
+        	std::cout << "the status is: \n" << status_to_str(status);
+            //dbgPrint( "Command MOVE not successful: %s\n", status_to_str( status ) );
             return -1;
         }
     // } else {
@@ -399,20 +403,30 @@ int move( float width, float speed, bool stop_on_block, bool ignore_response)
 
 void graspForce( float forceLimit, float speed)
 {
+	setGraspingForceLimit(forceLimit);
 	float force = getGraspingForce();
-	move(0, speed, false, true);
+	move(0, speed, false, false);
+	//sleep(3000);
+	//std::cout << "-------------current width: " << getFingerWidth() << "  ----------------------\n";
+	//stop(true);
 	while (force <= forceLimit)
 	{
-		std::cout << "-------------detected force" << force << " set limit: " << forceLimit <<"----------------------\n";
-		if(getFingerWidth() <= 6)
+		std::cout << "-------------detected force: " << force << "    set limit: " << forceLimit <<" ----------------------\n";
+		std::cout << "-------------current width: " << getFingerWidth() << "  ----------------------\n";
+		if(getFingerWidth() <= 80)
 		{
 			dbgPrint("No object to grab\n");
-			move(100, speed, false, false);
-			return;
+			//stop(false);
+			//move(100, speed, false, false);
+			break;
 		}
+
 		force = getGraspingForce();
 	}
-	stop(true);
+	std::cout << "entering stop command\n";
+	stop();
+	std::cout << "exiting stop command\n";
+	grasp(getFingerWidth(),speed);
 }	
 
 int stop( bool ignore_response )
@@ -514,10 +528,11 @@ int grasp( float objWidth, float speed )
 		return 0;
 	}
 
+	std::cout << "just after grasp submit\n";
 	// Check response status
 	status = cmd_get_response_status( resp );
 	free( resp );
-	if ( status != E_SUCCESS )
+	if ( status != E_SUCCESS && status !=E_RANGE_ERROR)
 	{
 		dbgPrint( "Command GRASP not successful: %s\n", status_to_str( status ) );
 		return -1;

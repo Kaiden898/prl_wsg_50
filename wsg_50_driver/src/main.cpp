@@ -624,7 +624,7 @@ int main( int argc, char **argv )
 
             setAccSS = nh.advertiseService("set_acceleration", setAccSrv);
             setForceSS = nh.advertiseService("set_force", setForceSrv);
-            // kaiden
+            
             finger1InfoSS = nh.advertiseService("finger_1_info", finger1InfoSrv);
         }
 
@@ -679,11 +679,11 @@ int main( int argc, char **argv )
 
          
          ros::Rate loop_rate(10);
-         while (ros::ok())
+         /*while (ros::ok())
          {
             //force_msg.grip_force = get_finger_force(2);
             //finger_pub.publish(force_msg);
-            getGraspingForce();
+            //getGraspingForce();
             float pos = -(getFingerWidth() / 2000);
             //std::cout << "-------------+++" << pos << "----------------------\n";
             joint_state.header.stamp = ros::Time::now();
@@ -815,7 +815,7 @@ int main( int argc, char **argv )
              ros::spinOnce();
              loop_rate.sleep();
 
-         }
+         }*/
         ros::spin();
 
 	} else {

@@ -141,6 +141,7 @@ int cmd_submit( unsigned char id, unsigned char *payload, unsigned int len,
 	memset( &msg, 0, sizeof( msg ) );
 
 	// Receive response. Repeat if pending.
+	int count = 0;
 	do
 	{
 		// Free response
@@ -148,6 +149,9 @@ int cmd_submit( unsigned char id, unsigned char *payload, unsigned int len,
 
 		// Receive response data
 		res = msg_receive( &msg );
+		status = (status_t) make_short( msg.data[0], msg.data[1] );
+		printf("%s\n", status_to_str(status));
+		printf("%d\n", count++);
 		if ( res < 0 )
 		{
 			fprintf( stderr, "Message receive failed\n" );
@@ -185,8 +189,10 @@ int cmd_submit( unsigned char id, unsigned char *payload, unsigned int len,
 	// }
 
 	// kaiden: I added this to explore trying to send a move command and read force while moving
+	//printf("%s\n", status_to_str(status));
 	if (status == E_CMD_PENDING)
 	{
+		printf("statement entered\n");
 		cmd_pending = true;
 		pending_command = msg.id;
 	}
@@ -194,6 +200,11 @@ int cmd_submit( unsigned char id, unsigned char *payload, unsigned int len,
 	{
 		cmd_pending = false;
 		return cmd_submit(id, payload, len, pending, response, response_len);
+	}
+
+	if (status == E_TIMEOUT)
+	{
+		cmd_submit(id, payload, len, pending, response, response_len);
 	}
 
 
