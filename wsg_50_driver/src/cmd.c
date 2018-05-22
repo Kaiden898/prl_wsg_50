@@ -78,8 +78,7 @@
 //------------------------------------------------------------------------
 
 static bool connected = false;
-unsigned char pending_command;
-bool cmd_pending = false;
+
 
 //------------------------------------------------------------------------
 // Unit testing
@@ -141,7 +140,6 @@ int cmd_submit( unsigned char id, unsigned char *payload, unsigned int len,
 	memset( &msg, 0, sizeof( msg ) );
 
 	// Receive response. Repeat if pending.
-	int count = 0;
 	do
 	{
 		// Free response
@@ -149,21 +147,26 @@ int cmd_submit( unsigned char id, unsigned char *payload, unsigned int len,
 
 		// Receive response data
 		res = msg_receive( &msg );
-		status = (status_t) make_short( msg.data[0], msg.data[1] );
-		printf("%s\n", status_to_str(status));
-		printf("%d\n", count++);
 		if ( res < 0 )
 		{
 			fprintf( stderr, "Message receive failed\n" );
 			return -1;
 		}
-		
-		// // Check response ID
-		// if ( msg.id != id )
-		// {
-		// 	fprintf( stderr, "Response ID (%2x) does not match submitted command ID (%2x)\n", msg.id, id );
-		// 	return -1;
-		// }
+
+		// Check response ID
+		if ( msg.id != id )
+		{
+			// Free response
+			msg_free( &msg );
+			res = msg_receive( &msg );
+		if ( res < 0 )
+		{
+			fprintf( stderr, "Message receive failed\n" );
+			return -1;
+		}
+			fprintf( stderr, "Response ID (%2x) does not match submitted command ID (%2x)\n", msg.id, id );
+			//return -1;
+		}
 
 		if ( pending )
 		{
@@ -177,35 +180,6 @@ int cmd_submit( unsigned char id, unsigned char *payload, unsigned int len,
 		}
 	}
 	while( pending && status == E_CMD_PENDING );
-
-	// if (status != E_CMD_PENDING && pending_command)
-	// {
-	// 	pending_command = false;
-	// 	return cmd_submit(id, payload, len, pending, *response, *response_len);
-	// }
-	// else if (status == E_CMD_PENDING)
-	// {
-	// 	pending_command = true;
-	// }
-
-	// kaiden: I added this to explore trying to send a move command and read force while moving
-	//printf("%s\n", status_to_str(status));
-	if (status == E_CMD_PENDING)
-	{
-		printf("statement entered\n");
-		cmd_pending = true;
-		pending_command = msg.id;
-	}
-	else if (cmd_pending && pending_command == msg.id)
-	{
-		cmd_pending = false;
-		return cmd_submit(id, payload, len, pending, response, response_len);
-	}
-
-	if (status == E_TIMEOUT)
-	{
-		cmd_submit(id, payload, len, pending, response, response_len);
-	}
 
 
 	// Return payload

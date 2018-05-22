@@ -59,11 +59,11 @@
 #include "wsg_50_common/Incr.h"
 #include "wsg_50_common/Cmd.h"
 #include "wsg_50_common/gripForce.h"
- #include "wsg_50_common/GraspForce.h"
- #include "wsg_50_common/fingerDSAdata.h"
+#include "wsg_50_common/GraspForce.h"
+#include "wsg_50_common/fingerDSAdata.h"
 
 #include "sensor_msgs/JointState.h"
- #include "visualization_msgs/MarkerArray.h"
+#include "visualization_msgs/MarkerArray.h"
 #include "std_msgs/Float32.h"
 #include "std_msgs/Bool.h"
 
@@ -100,6 +100,7 @@ float g_goal_position = NAN, g_goal_speed = NAN, g_speed = 10.0;
 //------------------------------------------------------------------------
 // Local function prototypes
 //------------------------------------------------------------------------
+
 void setColor(int data, float& r_color, float& b_color, float& g_color)
 {
     if(data == 0)
@@ -127,17 +128,23 @@ void setColor(int data, float& r_color, float& b_color, float& g_color)
         g_color = 0.0;
     }
 }
-
 //------------------------------------------------------------------------
 // Function implementation
 //------------------------------------------------------------------------
 
+bool graspForceSrv(wsg_50_common::GraspForce::Request &req, wsg_50_common::GraspForce::Response &res)
+{
+    ROS_INFO("Grasping object");
+    graspForce(req.force, req.speed);
+    ROS_INFO("Object grasped");
+    return true;
+}
 
 bool moveSrv(wsg_50_common::Move::Request &req, wsg_50_common::Move::Response &res)
 {
 	if ( (req.width >= 0.0 && req.width <= 110.0) && (req.speed > 0.0 && req.speed <= 420.0) ){
   		ROS_INFO("Moving to %f position at %f mm/s.", req.width, req.speed);
-		res.error = move(req.width, req.speed, false, false);
+		res.error = move(req.width, req.speed, false);
 	}else if (req.width < 0.0 || req.width > 110.0){
 		ROS_ERROR("Imposible to move to this position. (Width values: [0.0 - 110.0] ");
 		res.error = 255;
@@ -236,23 +243,6 @@ bool homingSrv(std_srvs::Empty::Request &req, std_srvs::Empty::Request &res)
 	homing();
 	ROS_INFO("Home position reached.");
 	return true;
-}
-
-//kaiden
-bool finger1InfoSrv(std_srvs::Empty::Request &req, std_srvs::Empty::Request &res)
-{
-    ROS_INFO("Getting finger 1 information");
-    fingerInfo(1);
-    ROS_INFO(" finger 1 information recieved.");
-    return true;
-}
-
-bool graspForceSrv(wsg_50_common::GraspForce::Request &req, wsg_50_common::GraspForce::Response &res)
-{
-    ROS_INFO("Grasping object");
-    graspForce(req.force, req.speed);
-    ROS_INFO("Object grasped");
-    return true;
 }
 
 bool stopSrv(std_srvs::Empty::Request &req, std_srvs::Empty::Request &res)
@@ -560,7 +550,6 @@ void sigint_handler(int sig) {
     ros::shutdown();
 }
 
-
 /**
  * The main function
  */
@@ -610,7 +599,7 @@ int main( int argc, char **argv )
         ROS_INFO("Gripper connection stablished");
 
 		// Services
-        ros::ServiceServer moveSS, graspSS, graspForceSS, releaseSS, homingSS, stopSS, ackSS, incrementSS, setAccSS, setForceSS, finger1InfoSS;
+        ros::ServiceServer moveSS, graspSS, graspForceSS, releaseSS, homingSS, stopSS, ackSS, incrementSS, setAccSS, setForceSS;
 
         if (g_mode_script || g_mode_polling) {
             moveSS = nh.advertiseService("move", moveSrv);
@@ -624,8 +613,6 @@ int main( int argc, char **argv )
 
             setAccSS = nh.advertiseService("set_acceleration", setAccSrv);
             setForceSS = nh.advertiseService("set_force", setForceSrv);
-            
-            finger1InfoSS = nh.advertiseService("finger_1_info", finger1InfoSrv);
         }
 
 		// Subscriber
@@ -641,11 +628,7 @@ int main( int argc, char **argv )
         if (g_mode_script || g_mode_periodic)
             g_pub_moving = nh.advertise<std_msgs::Bool>("moving", 10);
 
-        // finger data publishers
-        ros::Publisher finger_pub = nh.advertise<wsg_50_common::gripForce>("grip_force", 1000);
-        wsg_50_common::gripForce force_msg;
-
-        ros::Publisher left_finger_DSA_pub = nh.advertise<wsg_50_common::fingerDSAdata>("left_finger_dsa_array", 1000);
+         ros::Publisher left_finger_DSA_pub = nh.advertise<wsg_50_common::fingerDSAdata>("left_finger_dsa_array", 1000);
         ros::Publisher right_finger_DSA_pub = nh.advertise<wsg_50_common::fingerDSAdata>("right_finger_dsa_array", 1000);
         wsg_50_common::fingerDSAdata finger_dsa_msg;
 
@@ -656,7 +639,6 @@ int main( int argc, char **argv )
 
         ros::Publisher state_pub = nh.advertise<sensor_msgs::JointState>( "joint_states", 1 );
         sensor_msgs::JointState joint_state;
-        
 
 		ROS_INFO("Ready to use. Homing and taring now...");
 		homing();
@@ -669,7 +651,6 @@ int main( int argc, char **argv )
 		}
 
         ROS_INFO("Init done. Starting timer/thread with target rate %.1f.", rate);
-
         std::thread th;
         ros::Timer tmr;
         if (g_mode_polling || g_mode_script)
@@ -677,9 +658,8 @@ int main( int argc, char **argv )
         if (g_mode_periodic)
              th = std::thread(read_thread, (int)(1000.0/rate));
 
-         
-         ros::Rate loop_rate(10);
-         /*while (ros::ok())
+          ros::Rate loop_rate(10); 
+         while (ros::ok())
          {
             //force_msg.grip_force = get_finger_force(2);
             //finger_pub.publish(force_msg);
@@ -698,11 +678,18 @@ int main( int argc, char **argv )
             //finger 1
             unsigned short data[84];
             get_tactile_data(1, data);
-
+            float cellArea = 0.0034 * 0.0034;
+            int cellMaxVal = 3895;
+            int cellPressRange = 82200;
+            float forceTotal=0;
+            std::cout<< "---------------------Tactile Data--------------------------\n";
             for (int i = 0; i < 84; i++)
             {
+                forceTotal += data[i] * (cellPressRange / cellMaxVal) * cellArea ;
+               // std::cout<<  data[i] * (cellPressRange / cellMaxVal) * cellArea << " ";
             finger_dsa_msg.data_array.push_back(data[i]);
             }
+            //std::cout<< "\n" << forceTotal;
 
             //std::cout << "------------------- 2 " << sizeof(data) << " ---------------------\n";
              left_finger_DSA_pub.publish(finger_dsa_msg);
@@ -763,9 +750,10 @@ int main( int argc, char **argv )
 
             for (int i = 0; i < 84; i++)
             {
+            forceTotal += data[i] * (cellPressRange / cellMaxVal) * cellArea ;
             finger_dsa_msg.data_array.push_back(data[i]);
             }
-
+            std::cout<< "\n" << forceTotal;
             //std::cout << "------------------- 2 " << sizeof(data) << " ---------------------\n";
              right_finger_DSA_pub.publish(finger_dsa_msg);
              finger_dsa_msg.data_array.clear();
@@ -815,7 +803,7 @@ int main( int argc, char **argv )
              ros::spinOnce();
              loop_rate.sleep();
 
-         }*/
+         }
         ros::spin();
 
 	} else {
@@ -832,7 +820,6 @@ int main( int argc, char **argv )
 	return 0;
 
 }
-
 
 
 //------------------------------------------------------------------------

@@ -133,8 +133,6 @@ int homing( void )
 	return 0;
 }
 
-//kaiden
-// reads the type of finger attached and the size of a single data frame.
 int fingerInfo(int whichFinger)
 {
 	status_t status;
@@ -154,29 +152,6 @@ int fingerInfo(int whichFinger)
 		res = cmd_submit( 0x70, payload, 0, true, &resp, &resp_len );
 	}
 
-
-	// i had just started trying to see what the response was but had not tested. the manual lists 
-	// the response as enum type 
-	// char b = 'c';
-	// ROS_INFO_STREAM("resp[0]1: " << res);
-	// ROS_INFO_STREAM("resp[0]2: " << (int)resp[0]);
-	// ROS_INFO_STREAM("resp[0]3: " << (int)resp[1]);
-	// ROS_INFO_STREAM("resp[0]4: " << (int)resp[2]);
-	// // std::cout<<std::hex<<(int)resp[2];
-	// ROS_INFO_STREAM("resp[0]5: " << (int)resp[3]);
-	// ROS_INFO_STREAM("resp[0]6: " << (int)resp[4]);
-	// ROS_INFO_STREAM("resp[0]7: " << (int)resp[5]);
-	// ROS_INFO_STREAM("resp[0]8: " << (status_t) make_short( resp[0], resp[1] ));
-	// ROS_INFO_STREAM("resp[0]9: " << (status_t) make_short( resp[3], resp[4] ));
-	// ROS_INFO_STREAM("resp[0]10: " << convert(&resp[0]));
-	// ROS_INFO_STREAM("resp[0]11: " << convert(&resp[1]));
-	// ROS_INFO_STREAM("resp[0]12: " << convert(&resp[2]));
-	// ROS_INFO_STREAM("resp[0]13: " << convert(&resp[3]));
-	// ROS_INFO_STREAM("resp[0]14: " << convert(&resp[4]));
-	//dbgPrint("&resp: %d\n", &resp[1]);
-	//dbgPrint("&resp: %s\n", resp);
-	//dbgPrint("&resp_len: %d\n", resp_len);
-
 	// Check response status
 	status = cmd_get_response_status( resp );
 	if ( status != E_SUCCESS )
@@ -184,20 +159,9 @@ int fingerInfo(int whichFinger)
 		dbgPrint( "Unable to get finger info: %s\n", status_to_str( status ) );
 		return -1;
 	}
-
-	// Extract data from response
-		// int off=2;
-		// unsigned char resp_state[6] = {0,0,0,0,0,0};
-		// resp_state[2] = resp[2];
-		// info.state = resp[2];					 off+=1;
-		// info.state_text = std::string(getStateValues(resp_state));
-		// info.position = convert(&resp[off]);     off+=4;
-		// info.speed = convert(&resp[off]);        off+=4;
-		// info.f_motor = convert(&resp[off]);      off+=4;
-		// info.f_finger0 = convert(&resp[off]);    off+=4;
-		// info.f_finger1 = convert(&resp[off]);    off+=4;
+	int temp = (int) resp[2];
 	free( resp );
-	return (int) resp[2];
+	return temp;
 }
 
 // reads force felt by the finger
@@ -264,13 +228,18 @@ int get_tactile_data(int whichFinger, unsigned short data[])
 		return -1;
 	}
 	int count = 0;
+	//std::cout<< "---------------------Tactile Data--------------------------\n";
 	for (int i = 0; i < 168; i+=2)
 	{
 		data[count] = make_short(resp[i + 2], resp[i + 3]);
+		// printf ("%x",  resp[i + 2]);
+		// printf (" ");
+		// printf ("%x",  resp[i + 3]);
+		// printf ("  ");
 		
-		//std::cout<< data[count] <<" ";
 		count++;
 	}
+	//printf ("\n");
 	free( resp );
 	return 0;
 }
@@ -342,6 +311,7 @@ float getFingerWidth()
     return width;
 
 }
+
 /** \brief  Send move command (0x21) to gripper
  *  \param  ignore_response Do not read back response from gripper. (Must be read elsewhere, for auto update.)
  */
@@ -362,72 +332,183 @@ int move( float width, float speed, bool stop_on_block, bool ignore_response)
 	memcpy( &payload[1], &width, sizeof( float ) );
 	memcpy( &payload[5], &speed, sizeof( float ) );
 
-    //if (!ignore_response) {
+    if (!ignore_response) {
         // Submit command and wait for response. Push result to stack.
-	std::cout << "-------------+++" <<" start of command " <<"----------------------\n";
-        res = cmd_submit( 0x21, payload, 9, ignore_response, &resp, &resp_len );
-
-        std::cout << "-------------+++" << " end of command " <<"----------------------\n";
-        // if ( res != 2 )
-        // {
-        //     dbgPrint( "Response payload length doesn't match (is %d, expected 2)\n", res );
-        //     if ( res > 0 ) free( resp );
-        //     return 0;
-        // }
-
-        //Check response status
-        status = cmd_get_response_status( resp );
-        //std::cout << "the status is: " << status_to_str(status);
-        free( resp );
-        if ( status != E_SUCCESS && status != E_CMD_PENDING)
+        res = cmd_submit( 0x21, payload, 9, true, &resp, &resp_len );
+        if ( res != 2 )
         {
-        	std::cout << "the status is: \n" << status_to_str(status);
-            //dbgPrint( "Command MOVE not successful: %s\n", status_to_str( status ) );
+            dbgPrint( "Response payload length doesn't match (is %d, expected 2)\n", res );
+            if ( res > 0 ) free( resp );
+            return 0;
+        }
+
+        // Check response status
+        status = cmd_get_response_status( resp );
+        free( resp );
+        if ( status != E_SUCCESS )
+        {
+            dbgPrint( "Command MOVE not successful: %s\n", status_to_str( status ) );
             return -1;
         }
-    // } else {
-    //     // Submit command, do not wait for response
-    //     msg_t msg;
-    //     msg.id = 0x21; msg.len = 9; msg.data = &payload[0];
-    //     res = msg_send(&msg);
-    //     std::cout << "-------------+++" << " ignored " <<"----------------------\n";
-		
-    //     if (res <= 0) {
-    //         dbgPrint("Failed to send command MOVE\n");
-    //         return -1;
-    //     }
-    // }
+    } else {
+        // Submit command, do not wait for response
+        msg_t msg;
+        msg.id = 0x21; msg.len = 9; msg.data = &payload[0];
+        res = msg_send(&msg);
+        if (res <= 0) {
+            dbgPrint("Failed to send command MOVE\n");
+            return -1;
+        }
+    }
 
 	return 0;
 }
 
-void graspForce( float forceLimit, float speed)
+
+void graspForce (float forceLimit, float speed)
 {
 	setGraspingForceLimit(forceLimit);
-	float force = getGraspingForce();
-	move(0, speed, false, false);
-	//sleep(3000);
-	//std::cout << "-------------current width: " << getFingerWidth() << "  ----------------------\n";
-	//stop(true);
-	while (force <= forceLimit)
-	{
-		std::cout << "-------------detected force: " << force << "    set limit: " << forceLimit <<" ----------------------\n";
-		std::cout << "-------------current width: " << getFingerWidth() << "  ----------------------\n";
-		if(getFingerWidth() <= 80)
-		{
-			dbgPrint("No object to grab\n");
-			//stop(false);
-			//move(100, speed, false, false);
-			break;
-		}
+	grasp(100,speed);
+	// std::cout << " reached the beginning";
+	// setGraspingForceLimit(forceLimit);
+	// float force = getGraspingForce();
+	// bool object = true;
 
-		force = getGraspingForce();
-	}
-	std::cout << "entering stop command\n";
-	stop();
-	std::cout << "exiting stop command\n";
-	grasp(getFingerWidth(),speed);
-}	
+	// // prepare and send message to start movement
+	// msg_t msg;
+	// status_t status;
+	// int res;
+	// unsigned char payload[9];
+	// unsigned char *resp;
+	// unsigned int resp_len;
+
+	// // Set flags: Absolute movement (bit 0 is 0), stop on block (bit 1 is 1).
+	// payload[0] = 0x00;
+
+	// // Copy target width and speed
+	// float width = 1;
+	// memcpy( &payload[1], &width, sizeof( float ) );
+	// memcpy( &payload[5], &speed, sizeof( float ) );
+
+	// // send message
+ //    msg.id = 0x21; msg.len = 9; msg.data = payload;
+ //    res = msg_send(&msg);
+ //     if (res <= 0) {
+ //            dbgPrint("Failed to send command Pre-Position\n");
+ //     }
+
+ //     // recieve response
+ //     memset( &msg, 0, sizeof( msg ) );
+ //     msg_free( &msg );
+ //     res = msg_receive( &msg );
+	// if ( res < 0 ) {
+	// 		fprintf( stderr, "Pre-Position message receive failed\n" );
+	// }
+
+	// status = (status_t) make_short( msg.data[0], msg.data[1] );
+	// std::cout << "------------Pre-Position response-------------------\n";
+	// std::cout << "respnse ID: " << msg.id << std::endl;
+	// std::cout << "respnse status: " << status_to_str(status) << std::endl;
+
+	// msg_free( &msg );
+
+ //     // setup but do not send stop command
+ //     status_t statusStop;
+	// int resStop;
+	// unsigned char payloadStop[1];
+	// unsigned char *respStop;
+	// unsigned int resp_lenStop;
+
+	//  msg_t msgStop;
+ //        msgStop.id = 0x22; msgStop.len = 0; msgStop.data = &payloadStop[0];
+        
+ //    // setup but do not send grasp command
+ //    status_t statusGrip;
+	// int resGrip;
+	// unsigned char payloadGrip[8];
+	// unsigned char *respGrip;
+	// unsigned int resp_lenGrip;
+
+	// msg_t msgGrip;
+
+
+	// //move(0, speed, false, false);
+	// //sleep(3000);
+	// //std::cout << "-------------current width: " << getFingerWidth() << "  ----------------------\n";
+	// //stop(true);
+	// while (force <= 10)
+	// {
+	// 	std::cout << "-------------detected force: " << force << "    set limit: " << forceLimit <<" ----------------------\n";
+	// 	//std::cout << "-------------current width: " << getFingerWidth() << "  ----------------------\n";
+	// 	if(getFingerWidth() <= 10)
+	// 	{
+	// 		dbgPrint("No object to grab\n");
+	// 		object = false;
+	// 		//stop(false);
+	// 		//move(100, speed, false, false);
+	// 		break;
+	// 	}
+
+	// 	force = getGraspingForce();
+	// }
+
+	// // sending stop command
+	// std::cout << "entering stop command\n";
+	// resStop = msg_send(&msgStop);
+ //    if (resStop <= 0) {
+ //   		 dbgPrint("Failed to send command STOP\n");
+ //    }
+
+ //    // check response
+
+ //    // Reuse message struct to receive response
+	// memset( &msgStop, 0, sizeof( msgStop ) );
+	// msg_free( &msgStop );
+	
+	// resStop = msg_receive( &msgStop );
+	// if ( resStop < 0 )
+	// {
+	// 	fprintf( stderr, "Stop message receive failed\n" );
+	// }
+	// statusStop = (status_t) make_short( msgStop.data[0], msgStop.data[1] );
+	// std::cout << "------------Stop response-------------------\n";
+	// std::cout << "respnse ID: " << msgStop.id << std::endl;
+	// std::cout << "respnse status: " << status_to_str(statusStop) << std::endl;
+	// std::cout << "exiting stop command\n";
+
+	// if (object) {
+	// 	//sending grasp command
+	// 	float currentWidth = getFingerWidth();
+	// 	// Copy part width and speed
+	// 	memcpy( &payloadGrip[0], &currentWidth, sizeof( float ) );
+	// 	memcpy( &payloadGrip[4], &speed, sizeof( float ) );
+	// 	msgGrip.id = 0x25; msgGrip.len = 0; msgGrip.data = &payloadGrip[0];
+	// 	resGrip = msg_send(&msgGrip);
+ //        if (resGrip <= 0) {
+ //            dbgPrint("Failed to send command GRIP\n");
+ //        }
+
+ //        // check response
+
+ //        // Reuse message struct to receive response
+	// 		memset( &msgGrip, 0, sizeof( msgGrip ) );
+ //        do
+ //        {
+	// 		msg_free( &msgGrip );
+	
+	// 		resGrip = msg_receive( &msgGrip );
+	// 		if ( resGrip < 0 )
+	// 		{
+	// 			fprintf( stderr, "Grip message receive failed\n" );
+	// 		}
+	// 		statusGrip = (status_t) make_short( msgGrip.data[0], msgGrip.data[1] );
+	// 		std::cout << "------------Grip response-------------------\n";
+	// 		std::cout << "respnse ID: " << msgGrip.id << std::endl;
+	// 		std::cout << "respnse status: " << status_to_str(statusGrip) << std::endl;
+ //        }while (statusGrip == E_CMD_PENDING);
+ //    }
+	// std::cout << " reached the end";
+}
 
 int stop( bool ignore_response )
 {
@@ -528,11 +609,10 @@ int grasp( float objWidth, float speed )
 		return 0;
 	}
 
-	std::cout << "just after grasp submit\n";
 	// Check response status
 	status = cmd_get_response_status( resp );
 	free( resp );
-	if ( status != E_SUCCESS && status !=E_RANGE_ERROR)
+	if ( status != E_SUCCESS )
 	{
 		dbgPrint( "Command GRASP not successful: %s\n", status_to_str( status ) );
 		return -1;
