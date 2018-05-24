@@ -156,8 +156,16 @@ int cmd_submit( unsigned char id, unsigned char *payload, unsigned int len,
 		// Check response ID
 		if ( msg.id != id )
 		{
-			fprintf( stderr, "Response ID (%2x) does not match submitted command ID (%2x)\n", msg.id, id );
+			// Free response
+			msg_free( &msg );
+			res = msg_receive( &msg );
+		if ( res < 0 )
+		{
+			fprintf( stderr, "Message receive failed\n" );
 			return -1;
+		}
+			fprintf( stderr, "Response ID (%2x) does not match submitted command ID (%2x)\n", msg.id, id );
+			//return -1;
 		}
 
 		if ( pending )

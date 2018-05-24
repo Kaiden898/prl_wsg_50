@@ -133,8 +133,6 @@ int homing( void )
 	return 0;
 }
 
-//kaiden
-// reads the type of finger attached and the size of a single data frame.
 int fingerInfo(int whichFinger)
 {
 	status_t status;
@@ -154,29 +152,6 @@ int fingerInfo(int whichFinger)
 		res = cmd_submit( 0x70, payload, 0, true, &resp, &resp_len );
 	}
 
-
-	// i had just started trying to see what the response was but had not tested. the manual lists 
-	// the response as enum type 
-	// char b = 'c';
-	// ROS_INFO_STREAM("resp[0]1: " << res);
-	// ROS_INFO_STREAM("resp[0]2: " << (int)resp[0]);
-	// ROS_INFO_STREAM("resp[0]3: " << (int)resp[1]);
-	// ROS_INFO_STREAM("resp[0]4: " << (int)resp[2]);
-	// // std::cout<<std::hex<<(int)resp[2];
-	// ROS_INFO_STREAM("resp[0]5: " << (int)resp[3]);
-	// ROS_INFO_STREAM("resp[0]6: " << (int)resp[4]);
-	// ROS_INFO_STREAM("resp[0]7: " << (int)resp[5]);
-	// ROS_INFO_STREAM("resp[0]8: " << (status_t) make_short( resp[0], resp[1] ));
-	// ROS_INFO_STREAM("resp[0]9: " << (status_t) make_short( resp[3], resp[4] ));
-	// ROS_INFO_STREAM("resp[0]10: " << convert(&resp[0]));
-	// ROS_INFO_STREAM("resp[0]11: " << convert(&resp[1]));
-	// ROS_INFO_STREAM("resp[0]12: " << convert(&resp[2]));
-	// ROS_INFO_STREAM("resp[0]13: " << convert(&resp[3]));
-	// ROS_INFO_STREAM("resp[0]14: " << convert(&resp[4]));
-	//dbgPrint("&resp: %d\n", &resp[1]);
-	//dbgPrint("&resp: %s\n", resp);
-	//dbgPrint("&resp_len: %d\n", resp_len);
-
 	// Check response status
 	status = cmd_get_response_status( resp );
 	if ( status != E_SUCCESS )
@@ -184,20 +159,9 @@ int fingerInfo(int whichFinger)
 		dbgPrint( "Unable to get finger info: %s\n", status_to_str( status ) );
 		return -1;
 	}
-
-	// Extract data from response
-		// int off=2;
-		// unsigned char resp_state[6] = {0,0,0,0,0,0};
-		// resp_state[2] = resp[2];
-		// info.state = resp[2];					 off+=1;
-		// info.state_text = std::string(getStateValues(resp_state));
-		// info.position = convert(&resp[off]);     off+=4;
-		// info.speed = convert(&resp[off]);        off+=4;
-		// info.f_motor = convert(&resp[off]);      off+=4;
-		// info.f_finger0 = convert(&resp[off]);    off+=4;
-		// info.f_finger1 = convert(&resp[off]);    off+=4;
+	int temp = (int) resp[2];
 	free( resp );
-	return (int) resp[2];
+	return temp;
 }
 
 // reads force felt by the finger
@@ -264,13 +228,18 @@ int get_tactile_data(int whichFinger, unsigned short data[])
 		return -1;
 	}
 	int count = 0;
+	//std::cout<< "---------------------Tactile Data--------------------------\n";
 	for (int i = 0; i < 168; i+=2)
 	{
 		data[count] = make_short(resp[i + 2], resp[i + 3]);
+		// printf ("%x",  resp[i + 2]);
+		// printf (" ");
+		// printf ("%x",  resp[i + 3]);
+		// printf ("  ");
 		
-		//std::cout<< data[count] <<" ";
 		count++;
 	}
+	//printf ("\n");
 	free( resp );
 	return 0;
 }
@@ -292,7 +261,7 @@ float getGraspingForce ()
         payload[2] = ((auto_update & 0xff00) >> 8);
     }
 
-    res = cmd_submit(0x45, payload, 3, false, &resp, &resp_len ); 
+    res = cmd_submit(0x45, payload, 3, true, &resp, &resp_len ); 
 
     // Check response status
 	status = cmd_get_response_status( resp );
@@ -303,7 +272,7 @@ float getGraspingForce ()
 	}
 
     float force = convert(&resp[2]);
-    //std::cout << "---------------" << force << "----------------------\n";
+    std::cout << "---------------" << force << "----------------------\n";
     free(resp);
     return force;
 
@@ -333,7 +302,7 @@ float getFingerWidth()
 	status = cmd_get_response_status( resp );
 	if ( status != E_SUCCESS )
 	{
-		dbgPrint( "Unable to get gripping force: %s\n", status_to_str( status ) );
+		dbgPrint( "Unable to get gripper width: %s\n", status_to_str( status ) );
 		return -1;
 	}
 
@@ -342,6 +311,7 @@ float getFingerWidth()
     return width;
 
 }
+
 /** \brief  Send move command (0x21) to gripper
  *  \param  ignore_response Do not read back response from gripper. (Must be read elsewhere, for auto update.)
  */
@@ -394,19 +364,11 @@ int move( float width, float speed, bool stop_on_block, bool ignore_response)
 	return 0;
 }
 
-void graspForce( float force, float speed)
-{
-	while (getGraspingForce () <= force)
-	{
-		if(getFingerWidth() <= 6)
-		{
-			dbgPrint("No object to grab\n");
-			move(100, speed, false);
-			return;
-		}
 
-		move(getFingerWidth() - 0.05, speed, false);
-	}
+void graspForce (float forceLimit, float speed)
+{
+	setGraspingForceLimit(forceLimit);
+	grasp(100,speed);
 }
 
 int stop( bool ignore_response )
