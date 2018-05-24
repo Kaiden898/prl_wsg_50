@@ -1,5 +1,5 @@
 #ROS package prl_wsg_50
-#original code from ROS package for Schunk WSG-50 Gripper downloaded 05/2018
+original code from ROS package for Schunk WSG-50 Gripper downloaded 05/2018
 Forked from: [https://code.google.com/p/wsg50-ros-pkg](https://code.google.com/p/wsg50-ros-pkg)
 
 Modifications of this repository:
@@ -24,12 +24,12 @@ Todo: Restructure code
 ### Services
 See [https://code.google.com/p/wsg50-ros-pkg/wiki/wsg_50](https://code.google.com/p/wsg50-ros-pkg/wiki/wsg_50). Services currently block the reception of state updates.
 
-/wsg_50_driver/ack                 /wsg_50_driver/move_incrementally
-/wsg_50_driver/get_loggers         /wsg_50_driver/release
-/wsg_50_driver/grasp               /wsg_50_driver/set_acceleration
-/wsg_50_driver/graspForce          /wsg_50_driver/set_force
-/wsg_50_driver/homing              /wsg_50_driver/set_logger_level
-/wsg_50_driver/move                /wsg_50_driver/stop
+/wsg_50_driver/ack 					/wsg_50_driver/move_incrementally <br/>
+/wsg_50_driver/get_loggers 			/wsg_50_driver/release<br/>
+/wsg_50_driver/grasp 				/wsg_50_driver/set_acceleration<br/>
+/wsg_50_driver/graspForce 			/wsg_50_driver/set_force<br/>
+/wsg_50_driver/homing				/wsg_50_driver/set_logger_level<br/>
+/wsg_50_driver/move 				/wsg_50_driver/stop<br/>
 
 * */wsg_50_driver/ack [no parameters]* 
 	Acknoledge an error condition.
@@ -78,6 +78,17 @@ Signals a change in the motion state for position control. Can be used to wait f
 State information (opening width, speed, forces). Note: Not all fields are available with all communication modes.
 * */joint_states [OUT, sensor_msgs/JointState]:*<br/>
 Standard joint state message
+* */left_dsa_marker_array []*<br/>
+	Contains an array of markers corresponding to the left dsa finger sensor layout. The markers change
+	color based on the pressure applied to the sensor.  
+* */right_dsa_marker_array []*<br/>
+	Contains an array of markers corresponding to the right dsa finger sensor layout. The markers change
+	color based on the pressure applied to the sensor. 
+* */left_dsa_marker_array []*<br/>
+	Contains an array of integers corresponding to the left dsa finger sensor layout. The value is associated to the amount of pressure applied to the sensor and ranges from 0 to 3895. 
+* */right_dsa_marker_array []*<br/>
+	Contains an array of integers corresponding to the right dsa finger sensor layout. The value is associated to the amount of pressure applied to the sensor and ranges from 0 to 3895.
+
 
 
 ### Communication modes (closed-loop control)
