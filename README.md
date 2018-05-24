@@ -24,12 +24,12 @@ Todo: Restructure code
 ### Services
 See [https://code.google.com/p/wsg50-ros-pkg/wiki/wsg_50](https://code.google.com/p/wsg50-ros-pkg/wiki/wsg_50). Services currently block the reception of state updates.
 
-/wsg_50_driver/ack 					/wsg_50_driver/move_incrementally <br/>
-/wsg_50_driver/get_loggers 			/wsg_50_driver/release<br/>
-/wsg_50_driver/grasp 				/wsg_50_driver/set_acceleration<br/>
-/wsg_50_driver/graspForce 			/wsg_50_driver/set_force<br/>
-/wsg_50_driver/homing				/wsg_50_driver/set_logger_level<br/>
-/wsg_50_driver/move 				/wsg_50_driver/stop<br/>
+/wsg_50_driver/ack                  /wsg_50_driver/move_incrementally <br/>
+/wsg_50_driver/get_loggers          /wsg_50_driver/release<br/>
+/wsg_50_driver/grasp                /wsg_50_driver/set_acceleration<br/>
+/wsg_50_driver/graspForce           /wsg_50_driver/set_force<br/>
+/wsg_50_driver/homing               /wsg_50_driver/set_logger_level<br/>
+/wsg_50_driver/move                 /wsg_50_driver/stop<br/>
 
 * */wsg_50_driver/ack [no parameters]* 
 	Acknoledge an error condition.
