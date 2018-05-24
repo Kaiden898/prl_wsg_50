@@ -682,7 +682,7 @@ int main( int argc, char **argv )
             int cellMaxVal = 3895;
             int cellPressRange = 82200;
             float forceTotal=0;
-            std::cout<< "---------------------Tactile Data--------------------------\n";
+        
             for (int i = 0; i < 84; i++)
             {
                 forceTotal += data[i] * (cellPressRange / cellMaxVal) * cellArea ;
@@ -753,7 +753,8 @@ int main( int argc, char **argv )
             forceTotal += data[i] * (cellPressRange / cellMaxVal) * cellArea ;
             finger_dsa_msg.data_array.push_back(data[i]);
             }
-            std::cout<< "\n" << forceTotal;
+            //std::cout<< "---------------------Tactile Data--------------------------\n";
+            //std::cout<< "\n" << forceTotal;
             //std::cout << "------------------- 2 " << sizeof(data) << " ---------------------\n";
              right_finger_DSA_pub.publish(finger_dsa_msg);
              finger_dsa_msg.data_array.clear();
