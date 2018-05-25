@@ -44,7 +44,7 @@ See [https://code.google.com/p/wsg50-ros-pkg/wiki/wsg_50](https://code.google.co
 * */wsg_50_driver/graspForce [force to grasp with (N), speed (mm/s)]*
 	Grasps object with given force and speed. Minus soft limit must be set to allow gripping.
 	Refer to WSG 50 "Mounting and Operating Manual" and the "Command Set Reference Manual" 
-	for setting the minus soft limit.Object must be released before moving
+	for setting the minus soft limit. Object must be released before moving
 	the grippers fingers.
 
 * */wsg_50_driver/homing [no parameters]*
@@ -113,3 +113,39 @@ The script *cmd_measure.lua* must be running on the gripper for the script mode.
 ## Node wsg\_50_can
 
 Remains unchanged; new features not implemented here. 
+
+## Installation 
+
+## Connecting the Gripper
+
+1. Connect the lan line for the gripper and ensure connection to the following ip address <br />
+   192.168.1.20
+
+## wsg_50_driver Setup/Operation 
+1. Make sure the gripper is connected.
+
+2. Launch wsg_50_tcp.launch file using the following command<br />
+	roslaunch wsg_50_driver wsg_50_tcp.launch 
+
+3. The gripper will connect and home the finger position. once complete the status light on the gripper will 	
+   flash green.
+
+4. Now the services can be used to operate the gripper.
+
+5. Notes on operating.
+	1. When terminating the wsg_50_driver from ROS, a fault may occur with the gripper. The fault is indicated 
+	   by the status light flashing red and can be acknowledged on the wsg 50 control panel, Which is accessed through a web browser at http://192.168.1.20/.
+
+	2. To allow gripping of an unknown sized object the minus soft limit is set to 100mm. Refer to WSG 50 
+	   "Mounting and Operating Manual" and the "Command Set Reference Manual" for a description of the minus soft limit. With the limit set to 100mm a gripping command can only be peformed if the fingers are greater than 100mm apart. If an object is grasped the release command is used to move the fingers to greater than 100mm otherwise, the move command is used.
+
+	3. After an object has been grassped a release command must be issued before the gripper finger can be moved.
+
+*Sample Using Ros Services to Grip an Object With a Specific Force*
+1. Follow wsg_50_driver Setup/Operation.
+
+2. This command will grasp an object with a force of 40N at 30mm/s. <br />
+   rosservice call /wsg_50_driver/graspForce 40 30
+
+3. The object is then released and fingers moved to 105mm position at a speed of 30mm/s. <br />
+   rosservice call /wsg_50_driver/release 105 30
