@@ -1,0 +1,127 @@
+<?xml version="1.0"?>
+<robot name="myfirst">
+  <link name="base_link">
+    <visual>
+      <geometry>
+        <mesh filename="package://wsg_50_simulation/meshes/WSG50_110.stl" scale="1 1 1"/>
+      </geometry>
+      <material name="grey">
+		<color rgba="0.5 0.5 0.5 1"/>
+      </material>
+    </visual>
+  </link>
+
+  <!-- GRIPPER LEFT -->
+
+  <link name="left_gripper">
+    <visual>
+      <geometry>
+         <mesh filename="package://wsg_50_simulation/meshes/GUIDE_WSG50_110.stl" scale="0.001 0.001 0.001"/>
+      </geometry>
+      <material name="grey">
+		<color rgba="0.5 0.5 0.5 1"/>
+      </material>
+    </visual>
+  </link>
+
+   <joint name="base_to_left_gripper" type="prismatic">
+       <parent link="base_link"/>
+       <child link="left_gripper"/>
+       <origin xyz="-0.002 0 0" rpy="0 0 0" />
+       <limit lower="-0.055" upper="-0.0027" effort="1.0" velocity="1.0"/>
+   </joint>
+
+    <!-- LEFT FINGER -->
+
+    <link name="left_finger">
+    <visual>
+      <geometry>
+         <mesh filename="package://gripper_simulation/meshes/WSG-DSA_STEP_model.stl" scale="0.001 0.001 0.001"/>
+      </geometry>
+      <material name="black"/>
+    </visual>
+  </link>
+
+   <joint name="left_gripper_to_finger" type="fixed">
+       <parent link="left_gripper"/>
+       <child link="left_finger"/>
+       <origin xyz="0 0 0.089" rpy="-1.575 3.14 0" />
+   </joint>
+
+   <!-- left pad -->
+
+   <!--link name="left_pad">
+    <visual>
+      <geometry>
+         <box size="0.002 0.0204 0.0476"/>
+      </geometry>
+      <material name="blue">
+		<color rgba="0 0 1 1"/>
+      </material>
+    </visual>
+  </link>
+
+   <joint name="left_pad_to_gripper" type="fixed">
+       <parent link="left_finger"/>
+       <child link="left_pad"/>
+       <origin xyz="0 0 0.1092" rpy="0 0 0" />
+   </joint -->
+
+
+   <!-- GRIPPER right -->
+
+  <link name="right_gripper">
+    <visual>
+      <geometry>
+         <mesh filename="package://wsg_50_simulation/meshes/GUIDE_WSG50_110.stl" scale="0.001 0.001 0.001"/>
+      </geometry>
+      <material name="grey">
+		<color rgba="0.5 0.5 0.5 1"/>
+      </material>
+    </visual>
+  </link>
+
+   <joint name="base_to_right_gripper" type="prismatic">
+       <parent link="base_link"/>
+       <child link="right_gripper"/>
+       <origin xyz="0.002 0 0" rpy="0 0 3.14159" />
+       <limit lower="-0.0027" upper="-0.055" effort="1.0" velocity="1.0"/>
+   </joint>
+
+    <!-- right FINGER -->
+
+    <link name="right_finger">
+    <visual>
+      <geometry>
+         <mesh filename="package://gripper_simulation/meshes/WSG-DSA_STEP_model.stl" scale="0.001 0.001 0.001"/>
+      </geometry>
+      <material name="black"/>
+    </visual>
+  </link>
+
+   <joint name="right_gripper_to_finger" type="fixed">
+       <parent link="right_gripper"/>
+       <child link="right_finger"/>
+       <origin xyz="0 0 0.089" rpy="-1.575 3.14 0" />
+   </joint>
+
+   <!-- right pad -->
+
+   <!--link name="right_pad">
+    <visual>
+      <geometry>
+         <box size="0.002 0.0204 0.0476"/>
+      </geometry>
+      <material name="blue">
+		<color rgba="0 0 1 1"/>
+      </material>
+    </visual>
+  </link>
+
+   <joint name="right_pad_to_gripper" type="fixed">
+       <parent link="right_finger"/>
+       <child link="right_pad"/>
+       <origin xyz="0 0 0.1092" rpy="0 0 0" />
+   </joint -->
+
+</robot>

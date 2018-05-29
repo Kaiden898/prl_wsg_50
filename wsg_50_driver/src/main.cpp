@@ -700,8 +700,8 @@ int main( int argc, char **argv )
              //const float width = 0.0204;  
              const float marker_length = 0.0034;
              const float marker_width = 0.0034;
-             float y_pos = -0.0085;
-             float z_pos = 0.0221;
+             float z_pos = -0.0085;
+             float y_pos = 0.0656;
              bool color_change = true;
              float r_color = 1.0;
              float g_color = 0.0;
@@ -710,20 +710,20 @@ int main( int argc, char **argv )
              for (int i = 0; i < 84; i++)
              {
                 setColor(data[i], r_color, g_color, b_color);
-                marker.header.frame_id = "left_pad";
+                marker.header.frame_id = "left_finger";
                 marker.header.stamp = ros::Time();
                 marker.ns = "left_pad_marker";
                 marker.id = i;
                 marker.type = visualization_msgs::Marker::CUBE;
                 marker.action = visualization_msgs::Marker::ADD;
-                marker.pose.position.x = 0;
+                marker.pose.position.x = -0.0103;
                 marker.pose.position.y = y_pos;
                 marker.pose.position.z = z_pos;
                 marker.pose.orientation.x = 0.0;
                 marker.pose.orientation.y = 0.0;
                 marker.pose.orientation.z = 0.0;
                 marker.pose.orientation.w = 1.0;
-                marker.scale.x = 0.002;
+                marker.scale.x = 0.004;
                 marker.scale.y = marker_length;
                 marker.scale.z = marker_width;
                 marker.color.a = 1.0; 
@@ -733,12 +733,12 @@ int main( int argc, char **argv )
 
                 markers.markers.push_back(marker);
 
-                y_pos += 0.0034;
+                z_pos += 0.0034;
 
-                if (y_pos > 0.0102)
+                if (z_pos > 0.0102)
                 {
-                    y_pos = -0.0085;
-                    z_pos -= 0.0034;
+                    z_pos = -0.0085;
+                    y_pos -= 0.0034;
                 }
              }
              left_vis_pub.publish( markers );
@@ -760,27 +760,27 @@ int main( int argc, char **argv )
              finger_dsa_msg.data_array.clear();
 
              
-             y_pos = -0.0085;
-             z_pos = 0.0221;
+             z_pos = -0.0085;
+             y_pos = 0.0656;
              
 
              for (int i = 0; i < 84; i++)
              {
                 setColor(data[i], r_color, g_color, b_color);
-                marker.header.frame_id = "right_pad";
+                marker.header.frame_id = "right_finger";
                 marker.header.stamp = ros::Time();
                 marker.ns = "left_pad_marker";
                 marker.id = i;
                 marker.type = visualization_msgs::Marker::CUBE;
                 marker.action = visualization_msgs::Marker::ADD;
-                marker.pose.position.x = 0;
+                marker.pose.position.x = -0.0103;
                 marker.pose.position.y = y_pos;
                 marker.pose.position.z = z_pos;
                 marker.pose.orientation.x = 0.0;
                 marker.pose.orientation.y = 0.0;
                 marker.pose.orientation.z = 0.0;
                 marker.pose.orientation.w = 1.0;
-                marker.scale.x = 0.002;
+                marker.scale.x = 0.004;
                 marker.scale.y = marker_length;
                 marker.scale.z = marker_width;
                 marker.color.a = 1.0; 
@@ -790,12 +790,12 @@ int main( int argc, char **argv )
 
                 markers.markers.push_back(marker);
 
-                y_pos += 0.0034;
+                z_pos += 0.0034;
 
-                if (y_pos > 0.0102)
+                if (z_pos > 0.0102)
                 {
-                    y_pos = -0.0085;
-                    z_pos -= 0.0034;
+                    z_pos = -0.0085;
+                    y_pos -= 0.0034;
                 }
              }
              right_vis_pub.publish( markers );
