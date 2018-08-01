@@ -6,7 +6,7 @@
   <remap from="/joint_states" to="/joint_states_gripper" if="$(arg remap)"/>
 
   <node  name="wsg_50_driver"  pkg="wsg_50_driver" type="wsg_50_ip" output="screen">
-	<param name="ip" type="string" value="192.168.20.2"/>
+	<param name="ip" type="string" value="192.168.3.20"/>
 	<param name="port" type="int" value="1000"/>
     <param name="protocol" type="string" value="tcp"/>
     <param name="com_mode" type="string" value="$(arg com_mode)"/>

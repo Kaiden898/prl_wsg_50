@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<launch>
+
+  <node name="dsa_array_plot"
+        pkg="rqt_plot"
+        type="rqt_plot"
+        args="/wsg_50_driver/left_finger_dsa_array/data_array[0]
+        /wsg_50_driver/left_finger_dsa_array/data_array[0]
+        /wsg_50_driver/left_finger_dsa_array/data_array[0]
+        /wsg_50_driver/left_finger_dsa_array/data_array[0]
+        /wsg_50_driver/left_finger_dsa_array/data_array[0]
+        /wsg_50_driver/left_finger_dsa_array/data_array[0]
+        /wsg_50_driver/left_finger_dsa_array/data_array[0]
+        /wsg_50_driver/left_finger_dsa_array/data_array[0]
+        /wsg_50_driver/left_finger_dsa_array/data_array[0]
+        /wsg_50_driver/left_finger_dsa_array/data_array[0]
+        /wsg_50_driver/left_finger_dsa_array/data_array[0]" />
+
+
+</launch>

@@ -173,7 +173,7 @@ float get_finger_force( int whichFinger)
 	unsigned char *resp;
 	unsigned int resp_len;
  
-	if (whichFinger = 1)
+	if (whichFinger == 1)
 	{	
 		// command on page 44 of command set reference manual.
 		res = cmd_submit( 0x63, payload, 0, true, &resp, &resp_len );
@@ -194,10 +194,9 @@ float get_finger_force( int whichFinger)
 
 
 	//ROS_INFO_STREAM("resp[0]1: " << convert(&resp[2]));
+	float force = convert (&resp[2]);
 	free( resp );
-	return convert (&resp[2]);
-
-
+	return force;
 
 }
 
@@ -362,6 +361,37 @@ int move( float width, float speed, bool stop_on_block, bool ignore_response)
     }
 
 	return 0;
+}
+
+int dsaGrasp(float forceLimit)
+{
+	status_t status;
+	int res;
+	unsigned char payload[4];
+	unsigned char *resp;
+	unsigned int resp_len;
+
+	memcpy( &payload[0], &forceLimit, sizeof( float ) );
+
+	std::cout << "---------------" << convert(payload) << "----------------------\n";
+
+	res = cmd_submit( 0xB3, payload, 4, true, &resp, &resp_len );
+        if ( res != 2 )
+        {
+            dbgPrint( "Response payload length doesn't match (is %d, expected 2)\n", res );
+            if ( res > 0 ) free( resp );
+            return 0;
+        }
+
+        // Check response status
+        status = cmd_get_response_status( resp );
+        free( resp );
+        if ( status != E_SUCCESS )
+        {
+            dbgPrint( "Command MOVE not successful: %s\n", status_to_str( status ) );
+            return -1;
+        }
+        return 0;
 }
 
 

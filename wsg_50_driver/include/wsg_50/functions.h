@@ -73,6 +73,7 @@ int get_tactile_data(int whichFinger, unsigned short data[]);
 float getGraspingForce ();
 float getFingerWidth ();
 int move(float width, float speed, bool stop_on_block, bool ignore_response = false);
+int dsaGrasp(float forceLimit);
 void graspForce( float force, float speed);
 int stop( bool ignore_response = false );
 int grasp( float objWidth, float speed );

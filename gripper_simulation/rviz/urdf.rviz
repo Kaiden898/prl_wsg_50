@@ -7,9 +7,7 @@ Panels:
         - /Global Options1
         - /Status1
         - /RobotModel1
-        - /TF1
-        - /dsa_MarkerArray1
-        - /MarkerArray1
+        - /Marker1
       Splitter Ratio: 0.5
     Tree Height: 429
   - Class: rviz/Selection
@@ -77,22 +75,12 @@ Visualization Manager:
           Show Axes: false
           Show Trail: false
           Value: true
-        left_pad:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
         right_finger:
           Alpha: 1
           Show Axes: false
           Show Trail: false
           Value: true
         right_gripper:
-          Alpha: 1
-          Show Axes: false
-          Show Trail: false
-          Value: true
-        right_pad:
           Alpha: 1
           Show Axes: false
           Show Trail: false
@@ -114,13 +102,9 @@ Visualization Manager:
           Value: true
         left_gripper:
           Value: true
-        left_pad:
-          Value: true
         right_finger:
           Value: true
         right_gripper:
-          Value: true
-        right_pad:
           Value: true
       Marker Scale: 0.5
       Name: TF
@@ -131,28 +115,34 @@ Visualization Manager:
         base_link:
           left_gripper:
             left_finger:
-              left_pad:
-                {}
+              {}
           right_gripper:
             right_finger:
-              right_pad:
-                {}
+              {}
       Update Interval: 0
       Value: true
     - Class: rviz/MarkerArray
-      Enabled: true
+      Enabled: false
       Marker Topic: /wsg_50_driver/left_dsa_marker_array
       Name: dsa_MarkerArray
       Namespaces:
-        left_pad_marker: true
+        {}
       Queue Size: 100
-      Value: true
+      Value: false
     - Class: rviz/MarkerArray
-      Enabled: true
+      Enabled: false
       Marker Topic: /wsg_50_driver/right_dsa_marker_array
       Name: MarkerArray
       Namespaces:
-        left_pad_marker: true
+        {}
+      Queue Size: 100
+      Value: false
+    - Class: rviz/Marker
+      Enabled: true
+      Marker Topic: /wsg_50_driver/left_force_marker
+      Name: Marker
+      Namespaces:
+        left_force_marker: true
       Queue Size: 100
       Value: true
   Enabled: true
@@ -179,7 +169,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 0.454733
+      Distance: 0.28406
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.06
         Stereo Focal Distance: 1
@@ -191,10 +181,10 @@ Visualization Manager:
         Z: 0
       Name: Current View
       Near Clip Distance: 0.01
-      Pitch: 0.590397
+      Pitch: 0.320398
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 1.42358
+      Yaw: 1.62858
     Saved: ~
 Window Geometry:
   Displays:

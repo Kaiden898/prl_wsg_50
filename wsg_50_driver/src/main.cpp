@@ -68,6 +68,7 @@
 #include "std_msgs/Bool.h"
 
 
+
 //------------------------------------------------------------------------
 // Local macros
 //------------------------------------------------------------------------
@@ -136,6 +137,14 @@ bool graspForceSrv(wsg_50_common::GraspForce::Request &req, wsg_50_common::Grasp
 {
     ROS_INFO("Grasping object");
     graspForce(req.force, req.speed);
+    ROS_INFO("Object grasped");
+    return true;
+}
+
+bool dsaGraspSrv(wsg_50_common::Conf::Request &req, wsg_50_common::Conf::Response &res)
+{
+    ROS_INFO("Grasping object");
+    dsaGrasp(req.val);
     ROS_INFO("Object grasped");
     return true;
 }
@@ -599,11 +608,12 @@ int main( int argc, char **argv )
         ROS_INFO("Gripper connection stablished");
 
 		// Services
-        ros::ServiceServer moveSS, graspSS, graspForceSS, releaseSS, homingSS, stopSS, ackSS, incrementSS, setAccSS, setForceSS;
+        ros::ServiceServer moveSS, graspSS, dsaGraspSS, graspForceSS, releaseSS, homingSS, stopSS, ackSS, incrementSS, setAccSS, setForceSS;
 
         if (g_mode_script || g_mode_polling) {
             moveSS = nh.advertiseService("move", moveSrv);
             graspSS = nh.advertiseService("grasp", graspSrv);
+            dsaGraspSS = nh.advertiseService("dsaGrasp", dsaGraspSrv);
             graspForceSS = nh.advertiseService("graspForce", graspForceSrv);
             releaseSS = nh.advertiseService("release", releaseSrv);
             homingSS = nh.advertiseService("homing", homingSrv);
@@ -631,11 +641,16 @@ int main( int argc, char **argv )
          ros::Publisher left_finger_DSA_pub = nh.advertise<wsg_50_common::fingerDSAdata>("left_finger_dsa_array", 1000);
         ros::Publisher right_finger_DSA_pub = nh.advertise<wsg_50_common::fingerDSAdata>("right_finger_dsa_array", 1000);
         wsg_50_common::fingerDSAdata finger_dsa_msg;
+        ros::Publisher FMF0Force = nh.advertise<wsg_50_common::gripForce>("FMF0Force", 1000);
+        ros::Publisher FMF1Force = nh.advertise<wsg_50_common::gripForce>("FMF1Force", 1000);
 
         ros::Publisher left_vis_pub = nh.advertise<visualization_msgs::MarkerArray>( "left_dsa_marker_array", 0 );
         ros::Publisher right_vis_pub = nh.advertise<visualization_msgs::MarkerArray>( "right_dsa_marker_array", 0 );
         visualization_msgs::Marker marker;
         visualization_msgs::MarkerArray markers;
+
+        ros::Publisher right_force_marker = nh.advertise<visualization_msgs::Marker>( "right_force_marker", 0 );
+        ros::Publisher left_force_marker = nh.advertise<visualization_msgs::Marker>( "left_force_marker", 0 );
 
         ros::Publisher state_pub = nh.advertise<sensor_msgs::JointState>( "joint_states", 1 );
         sensor_msgs::JointState joint_state;
@@ -658,9 +673,11 @@ int main( int argc, char **argv )
         if (g_mode_periodic)
              th = std::thread(read_thread, (int)(1000.0/rate));
 
+
           ros::Rate loop_rate(10); 
          while (ros::ok())
          {
+            
             //force_msg.grip_force = get_finger_force(2);
             //finger_pub.publish(force_msg);
             //getGraspingForce();
@@ -675,6 +692,8 @@ int main( int argc, char **argv )
             joint_state.position[1] = pos;
             state_pub.publish(joint_state);
 
+            //DSA Finger 
+            /*
             //finger 1
             unsigned short data[84];
             get_tactile_data(1, data);
@@ -753,8 +772,11 @@ int main( int argc, char **argv )
             forceTotal += data[i] * (cellPressRange / cellMaxVal) * cellArea ;
             finger_dsa_msg.data_array.push_back(data[i]);
             }
-            //std::cout<< "---------------------Tactile Data--------------------------\n";
-            //std::cout<< "\n" << forceTotal;
+            std::cout<< "---------------------Tactile Data--------------------------\n";
+            std::cout<< "\n" << forceTotal;
+            wsg_50_common::gripForce dsaTotal;
+            dsaTotal.grip_force = forceTotal;
+            dsaForceTotal.publish(dsaTotal);
             //std::cout << "------------------- 2 " << sizeof(data) << " ---------------------\n";
              right_finger_DSA_pub.publish(finger_dsa_msg);
              finger_dsa_msg.data_array.clear();
@@ -800,6 +822,69 @@ int main( int argc, char **argv )
              }
              right_vis_pub.publish( markers );
              markers.markers.clear();
+            */
+
+             //FMF Finger
+             float force0 = get_finger_force(0);
+             float force1 = get_finger_force(1);
+
+             wsg_50_common::gripForce finger0_force;
+             wsg_50_common::gripForce finger1_force;
+
+            finger0_force.grip_force = force0;
+            finger1_force.grip_force = force1;
+
+            FMF0Force.publish(finger0_force);
+            FMF1Force.publish(finger1_force);
+
+                marker.header.frame_id = "left_finger";
+                marker.header.stamp = ros::Time();
+                marker.ns = "left_force_marker";
+                marker.id = 0;
+                marker.type = visualization_msgs::Marker::ARROW;
+                marker.action = visualization_msgs::Marker::ADD;
+                marker.pose.position.x = 0;
+                marker.pose.position.y = 0;
+                marker.pose.position.z = 0.120;
+                marker.pose.orientation.x = 0.0;
+                marker.pose.orientation.y = 0.0;
+                marker.pose.orientation.z = 0.0;
+                marker.pose.orientation.w = 1.0;
+                marker.scale.z = 0.004;
+                marker.scale.y = 0.004;
+                marker.scale.x = -(force0 / 80 * 0.075);
+                marker.color.a = 1.0; 
+                marker.color.r = 1;
+                marker.color.g = 0;
+                marker.color.b = 0;
+                marker.text = std::to_string(force0);
+
+                left_force_marker.publish(marker);
+
+                marker.header.frame_id = "right_finger";
+                marker.header.stamp = ros::Time();
+                marker.ns = "right_force_marker";
+                marker.id = 0;
+                marker.type = visualization_msgs::Marker::ARROW;
+                marker.action = visualization_msgs::Marker::ADD;
+                marker.pose.position.x = 0;
+                marker.pose.position.y = 0;
+                marker.pose.position.z = 0.120;
+                marker.pose.orientation.x = 0.0;
+                marker.pose.orientation.y = 0.0;
+                marker.pose.orientation.z = 0.0;
+                marker.pose.orientation.w = 1.0;
+                marker.scale.z = 0.004;
+                marker.scale.y = 0.004;
+                marker.scale.x = -(force1 / 80 * 0.075);
+                marker.color.a = 1.0; 
+                marker.color.r = 1;
+                marker.color.g = 0;
+                marker.color.b = 0;
+                marker.text = std::to_string(force1);
+
+                right_force_marker.publish(marker);
+
 
              ros::spinOnce();
              loop_rate.sleep();
